@@ -6,28 +6,43 @@ import './css/styles.css';
 
 const form = document.querySelector('#search-form');
 const gallery = document.querySelector('.gallery');
+const paginationBtn = document.querySelector('.load-more');
+
+let simplelightbox = new SimpleLightbox('.gallery a');  
 
 const BASE_URL = 'https://pixabay.com/api/';
 const KEY = '35795496-dc73936924deac0cc2e60d251';
 let page = 1;
+let searchQuery = '';
+let limit = 500;
+let per_page = 40;
+let totalPages = Math.round(limit / per_page);
+
 
 form.addEventListener('submit', onSubmit);
+paginationBtn.addEventListener('click', onPagination);
 
 function onSubmit(evt) {
   evt.preventDefault();
-  const searchQuery = evt.currentTarget.elements.searchQuery.value.trim();
+   searchQuery = evt.currentTarget.elements.searchQuery.value.trim();
 
-  fetchPhotos(searchQuery)
+  fetchPhotos(searchQuery,page = 1)
     .then(data => {
 
-       if (!data.hits.length) {
+       if (!data.hits.length || !searchQuery) {
          Notiflix.Notify.failure(
            'Sorry, there are no images matching your search query. Please try again.'
          );
+         gallery.innerHTML = '';
+         paginationBtn.hidden = true;
+         return;
        }
       if (data.hits) {
         gallery.innerHTML = '';
-        gallery.insertAdjacentHTML('afterbegin', createMarkup(data.hits));
+        Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
+        gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+        simplelightbox.refresh();
+        paginationBtn.hidden=false;
       }
       
     })
@@ -35,17 +50,30 @@ function onSubmit(evt) {
   
 }
 
-async function fetchPhotos(query) {
-    const URL = `${BASE_URL}?key=${KEY}&q=${query}&image_type=photo&orientation=horizontal&safesearch=true&per_page=40&page=${page}`;
+
+function onPagination() {
+  page += 1;
+
+   if (page > totalPages) {
+     Notiflix.Notify.info(
+       'We are sorry, but you have reached the end of search results.'
+     );
+   }
+  fetchPhotos(searchQuery, page).then(data => {
+    gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+    simplelightbox.refresh();
+  });
+}
+
+
+async function fetchPhotos(query,page = 1) {
+    const URL = `${BASE_URL}?key=${KEY}&q=${query}&image_type=photo&orientation=horizontal&safesearch=true&per_page=${per_page}&page=${page}`;
   try {
     const response = await axios.get(URL);
     const { data } = response;
     return data;
   } catch (error) {
       console.error(error);
-      Notiflix.Notify.failure(
-        'Sorry, there are no images matching your search query. Please try again.'
-      );
   }
 }
 
@@ -86,7 +114,4 @@ function createMarkup(arr) {
     .join('');
 }
 
-  new SimpleLightbox('.gallery a', {
-    captionsData: 'alt',
-    captionDelay: 250,
-  });  
+ 
