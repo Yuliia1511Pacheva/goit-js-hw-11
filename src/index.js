@@ -2,23 +2,50 @@ import axios from 'axios';
 import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
+import { smoothScroll } from './scroll.js';
 import './css/styles.css';
 
 const form = document.querySelector('#search-form');
 const gallery = document.querySelector('.gallery');
-const paginationBtn = document.querySelector('.load-more');
+const guard = document.querySelector('.js-guard');
 
 let simplelightbox = new SimpleLightbox('.gallery a');
 
-
-let page = 12;
+let page = 1;
 let searchQuery = '';
-let limit = 500;
-let per_page = 40;
-let totalPages = Math.round(limit / per_page);
+const per_page = 40;
+
+const options = {
+  root: null,
+  rootMargin: '900px',
+  threshold: 0.0,
+};
+
+const observer = new IntersectionObserver(onInfinityScroll, options);
+
+function onInfinityScroll(entries, observer) {
+  entries.forEach(entry => {
+   
+    if (entry.isIntersecting) {
+      page += 1;
+       smoothScroll();
+      getPhotos(searchQuery, page).then(data => {
+        gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+        simplelightbox.refresh();
+
+        const totalPages = Math.round(data.totalHits / per_page);
+        if (page === totalPages) {
+          observer.unobserve(guard);
+           Notiflix.Notify.info(
+             'We are sorry, but you have reached the end of search results.'
+           );
+        }
+      });
+    }
+  });
+}
 
 form.addEventListener('submit', onSubmit);
-paginationBtn.addEventListener('click', onPagination);
 
 function onSubmit(evt) {
   evt.preventDefault();
@@ -31,36 +58,17 @@ function onSubmit(evt) {
           'Sorry, there are no images matching your search query. Please try again.'
         );
         gallery.innerHTML = '';
-        paginationBtn.hidden = true;
         return;
       }
       if (data.hits) {
         gallery.innerHTML = '';
         Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
         gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
-
-       
         simplelightbox.refresh();
-        paginationBtn.hidden = false;
+        observer.observe(guard);
       }
     })
     .catch(err => console.log(err));
-}
-
-function onPagination() {
-  page += 1;
-    if (page === totalPages) {
-      Notiflix.Notify.info(
-        'We are sorry, but you have reached the end of search results.'
-      );
-      paginationBtn.style.display = 'none';
-    }
-
-  getPhotos(searchQuery, page).then(data => {
-    gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
-
-    simplelightbox.refresh();
-  });
 }
 
 async function getPhotos(query, page) {
@@ -73,10 +81,9 @@ async function getPhotos(query, page) {
     orientation: 'horizontal',
     safesearch: 'true',
     per_page: per_page,
-    page: page
+    page: page,
   });
 
-  // const URL = `${BASE_URL}?key=${KEY}&q=${query}&image_type=photo&orientation=horizontal&safesearch=true&per_page=${per_page}&page=${page}`;
   try {
     const response = await axios.get(`${BASE_URL}?${params}`);
     const { data } = response;
@@ -120,16 +127,4 @@ function createMarkup(arr) {
   `
     )
     .join('');
-}
-
-
-function smoothScroll() {
-   const { height: cardHeight } = document
-     .querySelector('.gallery')
-     .firstElementChild.getBoundingClientRect();
-
-   window.scrollBy({
-     top: cardHeight * 2,
-     behavior: 'smooth',
-   });
 }

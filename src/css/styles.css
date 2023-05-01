@@ -25,32 +25,72 @@ ul {
   padding: 0;
 }
 
-
 .img {
   display: block;
   max-width: 100%;
 }
 
-.gallery{
-display: flex;
-gap: 40px;
-flex-wrap: wrap;
-padding: 30px;
+.gallery {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+  padding: 30px;
 }
 
-.photo-card{
+.photo-card {
   min-height: 218px;
   border-radius: 4px;
   overflow: hidden;
-box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.25);} 
+  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.25);
+}
 
-.info{
+.info {
   padding: 8px;
   display: flex;
   justify-content: space-between;
 }
 
-.info-item{
+.info-item {
   font-size: 10px;
   text-align: center;
 }
+
+.section-form{
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #2a2af5;
+  padding: 10px;
+  box-shadow: 0px 2px 12px rgb(33, 31, 31);
+}
+
+.search-form{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.input-form{
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-radius: 5px;
+  border: 1px solid grey;
+  padding: 5px;
+  margin-right: 10px;
+}
+
+.form-button{
+  display: block;
+  height: 100%;
+  cursor: pointer;
+  border-radius: 5px;
+  border: 1px solid grey;
+}
+
+
