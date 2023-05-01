@@ -83,6 +83,7 @@ function onInfinityScroll(entries, observer) {
 
         const totalPages = Math.round(data.totalHits / per_page);
         if (page === totalPages) {
+          console.log(totalPages);
           observer.unobserve(guard);
           Notiflix.Notify.info(
             'We are sorry, but you have reached the end of search results.'
