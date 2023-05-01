@@ -23,30 +23,30 @@ const options = {
 
 const observer = new IntersectionObserver(onInfinityScroll, options);
 
-function onInfinityScroll(entries, observer) {
-  entries.forEach(entry => {
-   
-    if (entry.isIntersecting) {
-      page += 1;
-       smoothScroll();
-      getPhotos(searchQuery, page).then(data => {
-        gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
-        simplelightbox.refresh();
-
-        const totalPages = Math.round(data.totalHits / per_page);
-        if (page === totalPages) {
-          observer.unobserve(guard);
-           Notiflix.Notify.info(
-             'We are sorry, but you have reached the end of search results.'
-           );
-        }
-      });
-    }
+async function getPhotos(query, page) {
+  const BASE_URL = 'https://pixabay.com/api/';
+  const KEY = '35795496-dc73936924deac0cc2e60d251';
+  const params = new URLSearchParams({
+    key: KEY,
+    q: query,
+    image_type: 'photo',
+    orientation: 'horizontal',
+    safesearch: 'true',
+    per_page: per_page,
+    page: page,
   });
+
+  try {
+    const response = await axios.get(`${BASE_URL}?${params}`);
+    const { data } = response;
+    return data;
+  } catch (error) {
+    console.error(error);
+  }
 }
 
-form.addEventListener('submit', onSubmit);
 
+form.addEventListener('submit', onSubmit);
 function onSubmit(evt) {
   evt.preventDefault();
   searchQuery = evt.currentTarget.elements.searchQuery.value.trim();
@@ -71,27 +71,28 @@ function onSubmit(evt) {
     .catch(err => console.log(err));
 }
 
-async function getPhotos(query, page) {
-  const BASE_URL = 'https://pixabay.com/api/';
-  const KEY = '35795496-dc73936924deac0cc2e60d251';
-  const params = new URLSearchParams({
-    key: KEY,
-    q: query,
-    image_type: 'photo',
-    orientation: 'horizontal',
-    safesearch: 'true',
-    per_page: per_page,
-    page: page,
-  });
 
-  try {
-    const response = await axios.get(`${BASE_URL}?${params}`);
-    const { data } = response;
-    return data;
-  } catch (error) {
-    console.error(error);
-  }
+function onInfinityScroll(entries, observer) {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      page += 1;
+      smoothScroll();
+      getPhotos(searchQuery, page).then(data => {
+        gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+        simplelightbox.refresh();
+
+        const totalPages = Math.round(data.totalHits / per_page);
+        if (page === totalPages) {
+          observer.unobserve(guard);
+          Notiflix.Notify.info(
+            'We are sorry, but you have reached the end of search results.'
+          );
+        }
+      });
+    }
+  });
 }
+
 
 function createMarkup(arr) {
   return arr
