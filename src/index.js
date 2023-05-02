@@ -13,6 +13,7 @@ let simplelightbox = new SimpleLightbox('.gallery a');
 
 let page = 1;
 let searchQuery = '';
+let totalPages = null;
 const per_page = 40;
 
 const options = {
@@ -49,10 +50,12 @@ async function getPhotos(query, page) {
 form.addEventListener('submit', onSubmit);
 function onSubmit(evt) {
   evt.preventDefault();
+  page = 1;
   searchQuery = evt.currentTarget.elements.searchQuery.value.trim();
-
+ 
   getPhotos(searchQuery, page)
     .then(data => {
+      totalPages = Math.round(data.totalHits / per_page);
       if (!data.hits.length || !searchQuery) {
         Notiflix.Notify.failure(
           'Sorry, there are no images matching your search query. Please try again.'
@@ -65,6 +68,8 @@ function onSubmit(evt) {
         Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
         gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
         simplelightbox.refresh();
+      }
+      if (page !== totalPages){
         observer.observe(guard);
       }
     })
@@ -74,6 +79,7 @@ function onSubmit(evt) {
 
 function onInfinityScroll(entries, observer) {
   entries.forEach(entry => {
+    console.log(entry);
     if (entry.isIntersecting) {
       page += 1;
       smoothScroll();
@@ -81,9 +87,8 @@ function onInfinityScroll(entries, observer) {
         gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
         simplelightbox.refresh();
 
-        const totalPages = Math.round(data.totalHits / per_page);
+        totalPages = Math.round(data.totalHits / per_page);
         if (page === totalPages) {
-          console.log(totalPages);
           observer.unobserve(guard);
           Notiflix.Notify.info(
             'We are sorry, but you have reached the end of search results.'
