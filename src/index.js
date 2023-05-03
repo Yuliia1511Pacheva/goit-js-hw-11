@@ -18,7 +18,7 @@ const per_page = 40;
 
 const options = {
   root: null,
-  rootMargin: '900px',
+  rootMargin: '100px',
   threshold: 0.0,
 };
 
@@ -52,10 +52,11 @@ function onSubmit(evt) {
   evt.preventDefault();
   page = 1;
   searchQuery = evt.currentTarget.elements.searchQuery.value.trim();
- 
+  gallery.innerHTML = '';
+  observer.disconnect();
   getPhotos(searchQuery, page)
     .then(data => {
-      totalPages = Math.round(data.totalHits / per_page);
+      totalPages = Math.ceil(data.totalHits / per_page);
       if (!data.hits.length || !searchQuery) {
         Notiflix.Notify.failure(
           'Sorry, there are no images matching your search query. Please try again.'
@@ -69,7 +70,9 @@ function onSubmit(evt) {
         gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
         simplelightbox.refresh();
       }
-      if (page !== totalPages){
+      if (page !== totalPages) {
+        console.log(page);
+        console.log(totalPages);
         observer.observe(guard);
       }
     })
@@ -82,13 +85,15 @@ function onInfinityScroll(entries, observer) {
     console.log(entry);
     if (entry.isIntersecting) {
       page += 1;
-      smoothScroll();
+      
       getPhotos(searchQuery, page).then(data => {
         gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
         simplelightbox.refresh();
 
-        totalPages = Math.round(data.totalHits / per_page);
+        totalPages = Math.ceil(data.totalHits / per_page);
         if (page === totalPages) {
+           console.log(page);
+           console.log(totalPages);
           observer.unobserve(guard);
           Notiflix.Notify.info(
             'We are sorry, but you have reached the end of search results.'
@@ -114,8 +119,11 @@ function createMarkup(arr) {
       }) => `
   <div class="photo-card">
   <a href="${largeImageURL}">
-  <img src="${webformatURL}" alt="${tags}" width="250" loading="lazy" />
+  <div class="photo-thumb">
+  <img src="${webformatURL}" alt="${tags}" class="image" loading="lazy" />
+  </div>
   </a>
+   
   <div class="info">
     <p class="info-item">
       <b>Likes</b> <br>${likes}
