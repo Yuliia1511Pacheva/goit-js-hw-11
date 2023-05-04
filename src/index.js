@@ -2,7 +2,6 @@ import axios from 'axios';
 import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
-import { smoothScroll } from './scroll.js';
 import './css/styles.css';
 
 const form = document.querySelector('#search-form');
@@ -18,7 +17,7 @@ const per_page = 40;
 
 const options = {
   root: null,
-  rootMargin: '100px',
+  rootMargin: '400px',
   threshold: 0.0,
 };
 
@@ -53,11 +52,18 @@ function onSubmit(evt) {
   page = 1;
   searchQuery = evt.currentTarget.elements.searchQuery.value.trim();
   gallery.innerHTML = '';
-  observer.disconnect();
+  observer.disconnect(guard);
+  
+  if (!searchQuery) {
+    Notiflix.Notify.failure('Please, enter query!');
+    return;
+  }
+  
   getPhotos(searchQuery, page)
     .then(data => {
       totalPages = Math.ceil(data.totalHits / per_page);
-      if (!data.hits.length || !searchQuery) {
+      
+      if (!data.hits.length) {
         Notiflix.Notify.failure(
           'Sorry, there are no images matching your search query. Please try again.'
         );
