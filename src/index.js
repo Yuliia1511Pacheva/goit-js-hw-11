@@ -52,8 +52,8 @@ function onSubmit(evt) {
   page = 1;
   searchQuery = evt.currentTarget.elements.searchQuery.value.trim();
   gallery.innerHTML = '';
-  observer.disconnect(guard);
-  
+  observer.unobserve(guard);
+
   if (!searchQuery) {
     Notiflix.Notify.failure('Please, enter query!');
     return;
@@ -88,18 +88,16 @@ function onSubmit(evt) {
 
 function onInfinityScroll(entries, observer) {
   entries.forEach(entry => {
-    console.log(entry);
+    
     if (entry.isIntersecting) {
       page += 1;
-      
+      console.log(entry);
       getPhotos(searchQuery, page).then(data => {
         gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
         simplelightbox.refresh();
 
         totalPages = Math.ceil(data.totalHits / per_page);
         if (page === totalPages) {
-           console.log(page);
-           console.log(totalPages);
           observer.unobserve(guard);
           Notiflix.Notify.info(
             'We are sorry, but you have reached the end of search results.'
