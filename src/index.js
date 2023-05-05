@@ -1,8 +1,10 @@
-import axios from 'axios';
+
 import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import './css/styles.css';
+import { getPhotos } from './js/service-api';
+import { createMarkup } from './js/markUp';
 
 const form = document.querySelector('#search-form');
 const gallery = document.querySelector('.gallery');
@@ -23,27 +25,6 @@ const options = {
 
 const observer = new IntersectionObserver(onInfinityScroll, options);
 
-async function getPhotos(query, page) {
-  const BASE_URL = 'https://pixabay.com/api/';
-  const KEY = '35795496-dc73936924deac0cc2e60d251';
-  const params = new URLSearchParams({
-    key: KEY,
-    q: query,
-    image_type: 'photo',
-    orientation: 'horizontal',
-    safesearch: 'true',
-    per_page: per_page,
-    page: page,
-  });
-
-  try {
-    const response = await axios.get(`${BASE_URL}?${params}`);
-    const { data } = response;
-    return data;
-  } catch (error) {
-    console.error(error);
-  }
-}
 
 
 form.addEventListener('submit', onSubmit);
@@ -103,47 +84,10 @@ function onInfinityScroll(entries, observer) {
             'We are sorry, but you have reached the end of search results.'
           );
         }
-      });
+      }).catch(err => console.log(err));
     }
   });
 }
 
 
-function createMarkup(arr) {
-  return arr
-    .map(
-      ({
-        downloads,
-        comments,
-        views,
-        likes,
-        tags,
-        largeImageURL,
-        webformatURL,
-      }) => `
-  <div class="photo-card">
-  <a href="${largeImageURL}">
-  <div class="photo-thumb">
-  <img src="${webformatURL}" alt="${tags}" class="image" loading="lazy" />
-  </div>
-  </a>
-   
-  <div class="info">
-    <p class="info-item">
-      <b>Likes</b> <br>${likes}
-    </p>
-    <p class="info-item">
-      <b>Views</b><br>${views}
-    </p>
-    <p class="info-item">
-      <b>Comments</b><br>${comments}
-    </p>
-    <p class="info-item">
-      <b>Downloads</b><br>${downloads}
-    </p>
-  </div>
-</div>
-  `
-    )
-    .join('');
-}
+
